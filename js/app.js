@@ -17,10 +17,44 @@ const SENTENCES = [
   "Hard work beats talent when talent fails to work hard."
 ];
 
+// Home Row Drill - words with A S D F J K L ; & variations
+const HOMEROW_WORDS = [
+  "sad", "lad", "dad", "ask", "flask", "flask", "disk", "ads", "jas", "alfs",
+  "flag", "fads", "jabs", "lads", "lack", "falls", "flash", "salary", "salad",
+  "class", "glass", "atlas", "slack", "ladyfish", "adsense", "flashdisk",
+  "salsa", "salsa", "alf", "alfa", "das", "all", "alley", "jazz", "jazzed"
+];
+
+// Numbers & Symbols Drill - NO ALPHABETS
+const NUMBERS_WORDS = [
+  "123", "456", "789", "100", "2020", "2024", "2025", "3.14", "9.99", "100%",
+  "50%", "99.9%", "007", "404", "8-8-8", "24/7", "50/50", "3:30", "12:00",
+  "$100", "$50", "$999", "#1", "#2", "#3", "==", "!=", "->", "=>", 
+  "++", "--", "&&", "||", "!", "@", "&", "%", "^", "*", "+", "-", "/", ":",
+  "123.456", "0.5", "1+1", "2*3", "10/5", "99-1", "!!!", "???", "...", "---",
+  ";;;", ":::", "()", "[]", "{}", "<>", "/*", "*/", "//", "\"\"", "''", "``"
+];
+
 function getRandomWords(count) {
   let words = [];
   for (let i = 0; i < count; i++) {
     words.push(WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)]);
+  }
+  return words.join(" ");
+}
+
+function getRandomHomeRowWords(count) {
+  let words = [];
+  for (let i = 0; i < count; i++) {
+    words.push(HOMEROW_WORDS[Math.floor(Math.random() * HOMEROW_WORDS.length)]);
+  }
+  return words.join(" ");
+}
+
+function getRandomNumbersWords(count) {
+  let words = [];
+  for (let i = 0; i < count; i++) {
+    words.push(NUMBERS_WORDS[Math.floor(Math.random() * NUMBERS_WORDS.length)]);
   }
   return words.join(" ");
 }

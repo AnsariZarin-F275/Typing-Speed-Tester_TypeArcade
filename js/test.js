@@ -23,7 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentStreak = 0;
   let charElements = [];
   let weakKeys = {}; // object to store missed keys
-  let currentMode = 'words';
+  
+  // Detect drill mode from URL query parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  let currentMode = urlParams.get('drill') || 'words';
 
   function initTest() {
     clearInterval(timer);
@@ -46,7 +49,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Remove old error state
     typingBox.classList.remove('error-state');
 
-    targetText = currentMode === 'words' ? getRandomWords(40) : getRandomSentence() + " " + getRandomSentence();
+    // Generate text based on drill mode
+    if (currentMode === 'homerow') {
+      targetText = getRandomHomeRowWords(40);
+    } else if (currentMode === 'numbers') {
+      targetText = getRandomNumbersWords(40);
+    } else if (currentMode === 'weakkeys') {
+      // Get weak keys from localStorage if available
+      const data = JSON.parse(localStorage.getItem('typingResult'));
+      if (data && data.weakKeys && Object.keys(data.weakKeys).length > 0) {
+        const topWeakKeys = Object.keys(data.weakKeys).slice(0, 10);
+        targetText = topWeakKeys.join(' ') + ' ' + topWeakKeys.join(' ') + ' ' + topWeakKeys.join(' ') + ' ' + topWeakKeys.join(' ');
+      } else {
+        targetText = getRandomWords(40); // Fallback if no weak keys detected
+      }
+    } else if (currentMode === 'sentences') {
+      targetText = getRandomSentence() + " " + getRandomSentence();
+    } else {
+      targetText = getRandomWords(40); // Default: words mode
+    }
     
     textDisplay.innerHTML = '';
     targetText.split('').forEach((char, index) => {
@@ -201,6 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
   btnModeWords.addEventListener('click', () => { currentMode = 'words'; initTest(); });
   btnModeSentences.addEventListener('click', () => { currentMode = 'sentences'; initTest(); });
 
-  // Init
+  // Init with detected drill mode
   initTest();
 });
