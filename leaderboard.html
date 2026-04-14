@@ -4,13 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TypeArcade - Improve Your Speed</title>
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/base.css?v=3">
+  <link rel="stylesheet" href="css/layout.css?v=3">
+  <link rel="stylesheet" href="css/components.css?v=3">
+  <link rel="stylesheet" href="css/pages.css?v=3">
+  <link rel="stylesheet" href="css/animations.css?v=3">
   <style>
     .leaderboard-list { max-width: 700px; margin: 0 auto; }
     .leaderboard-item {
-      display: flex;
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
       align-items: center;
-      justify-content: space-between;
+      gap: 1rem;
       padding: 1rem 1.5rem;
       background: var(--color-card-bg);
       border-radius: var(--radius-md);
@@ -20,9 +25,16 @@
       transition: transform 0.2s ease;
     }
     .leaderboard-item:hover { transform: translateX(5px); }
-    .item-rank { font-weight: 800; font-size: 1.2rem; width: 40px; }
-    .item-user { flex: 1; font-weight: 600; font-family: var(--font-heading); font-size: 1.1rem; }
-    .item-stats { display: flex; gap: 1.5rem; }
+    .item-rank { font-weight: 800; font-size: 1.2rem; text-align: center; }
+    .item-user { font-weight: 600; font-family: var(--font-heading); font-size: 1.1rem; min-width: 0; }
+    .item-stats {
+      display: grid;
+      grid-auto-flow: column;
+      justify-items: end;
+      gap: 1rem;
+      min-width: 140px;
+    }
+    .item-stats span { min-width: 50px; text-align: right; }
     .stat-wpm { color: var(--color-primary); font-weight: 800; font-size: 1.2rem; }
     
     .rank-1 { border-left-color: #fbbf24; background: linear-gradient(90deg, rgba(251, 191, 36, 0.1), transparent); }
@@ -36,14 +48,14 @@
 
   <main class="container">
     <div class="page-header mt-2 mb-2">
-      <h2>Wall of <span class="gradient-text">Fame</span></h2>
+      <h2><span class="gradient-text-new">Wall of Fame</span></h2>
       <p class="mb-2">The fastest typists in the arcade.</p>
     </div>
 
     <div class="leaderboard-list">
       <div class="leaderboard-item rank-1">
         <span class="item-rank" style="color: #fbbf24;">1</span>
-        <span class="item-user">GhostRider 👑</span>
+        <span class="item-user">GhostRider</span>
         <span class="item-stats">
           <span style="color: var(--color-success);">100%</span>
           <span class="stat-wpm">145 WPM</span>

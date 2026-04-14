@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TypeArcade - Improve Your Speed</title>
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/base.css?v=3">
+  <link rel="stylesheet" href="css/layout.css?v=3">
+  <link rel="stylesheet" href="css/components.css?v=3">
+  <link rel="stylesheet" href="css/pages.css?v=3">
+  <link rel="stylesheet" href="css/animations.css?v=3">
   <style>
     .weak-key-chip {
       background: var(--color-error);
@@ -16,6 +20,27 @@
       display: inline-block;
       margin: 5px;
     }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+      background: var(--color-card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      padding: 1.5rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 2rem;
+      max-width: 900px;
+      margin: 0 auto 2rem auto;
+    }
+
+    .stat-item { display: flex; flex-direction: column; align-items: center; }
+    .stat-label { font-family: var(--font-heading); font-size: 0.9rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700; }
+    .stat-value { font-family: var(--font-heading); font-size: 2.5rem; font-weight: 800; color: var(--color-primary); }
+    .stat-value.accent { color: var(--color-accent); }
+    .stat-value.secondary { color: var(--color-secondary); }
   </style>
   </head>
 <body>
@@ -24,7 +49,7 @@
 
   <main class="container text-center">
     <div class="page-header mt-2 mb-2">
-      <h2>Your <span class="gradient-text">Results</span></h2>
+      <h2><span class="gradient-text-new">Your Results</span></h2>
       <p id="badge-container" class="mt-1"></p>
     </div>
 

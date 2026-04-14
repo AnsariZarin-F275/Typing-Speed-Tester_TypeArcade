@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TypeArcade - Improve Your Speed</title>
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/base.css?v=3">
+  <link rel="stylesheet" href="css/layout.css?v=3">
+  <link rel="stylesheet" href="css/components.css?v=3">
+  <link rel="stylesheet" href="css/pages.css?v=3">
+  <link rel="stylesheet" href="css/animations.css?v=3">
   <style>
     .toggle-switch {
       position: relative;
@@ -34,8 +38,24 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 1rem;
       padding: 1rem 0;
       border-bottom: 1px solid #e2e8f0;
+    }
+    .card > h3 {
+      margin-bottom: 0.75rem;
+    }
+    .settings-row div {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+    }
+    .settings-row select.form-control {
+      height: 42px;
+      min-width: 160px;
+      align-self: center;
+      margin-left: auto;
     }
     .settings-row:last-child { border-bottom: none; }
   </style>
@@ -46,7 +66,7 @@
 
   <main class="container">
     <div class="page-header mt-2 mb-2">
-      <h2>Preferences & <span class="gradient-text">Settings</span></h2>
+      <h2><span class="gradient-text-new">Preferences & Settings</span></h2>
       <p class="mb-2">Customize your typing experience.</p>
     </div>
 
@@ -71,13 +91,13 @@
 
       <div class="settings-row">
         <div>
-          <h4>Base Font Size</h4>
-          <p class="text-muted" style="font-size: 0.9rem;">Adjust text scaling.</p>
+          <h4>Typing Text Size</h4>
+          <p class="text-muted" style="font-size: 0.9rem;">Adjust the size of the text you type.</p>
         </div>
         <select class="form-control" id="select-font" style="width: auto; padding: 0.5rem 1rem;">
-          <option value="14">Small (14px)</option>
-          <option value="16">Medium (16px)</option>
-          <option value="20">Large (20px)</option>
+          <option value="18">Small (18px)</option>
+          <option value="24">Medium (24px)</option>
+          <option value="30">Large (30px)</option>
         </select>
       </div>
 
@@ -93,9 +113,9 @@
       const selectFont = document.getElementById('select-font');
 
       // Init Load
-      const sSound = localStorage.getItem('TypeArcade_sound') !== 'false';
-      const sAnim = localStorage.getItem('TypeArcade_animations') !== 'false';
-      const sFont = localStorage.getItem('TypeArcade_fontSize') || '16';
+      const sSound = localStorage.getItem('typeArcade_sound') !== 'false';
+      const sAnim = localStorage.getItem('typeArcade_animations') !== 'false';
+      const sFont = localStorage.getItem('typeArcade_fontSize') || '24';
 
       if(sSound) toggleSound.classList.add('active');
       if(sAnim) toggleAnim.classList.add('active');
@@ -103,17 +123,17 @@
 
       toggleSound.addEventListener('click', () => {
         toggleSound.classList.toggle('active');
-        localStorage.setItem('TypeArcade_sound', toggleSound.classList.contains('active'));
+        localStorage.setItem('typeArcade_sound', toggleSound.classList.contains('active'));
       });
 
       toggleAnim.addEventListener('click', () => {
         toggleAnim.classList.toggle('active');
-        localStorage.setItem('TypeArcade_animations', toggleAnim.classList.contains('active'));
+        localStorage.setItem('typeArcade_animations', toggleAnim.classList.contains('active'));
       });
 
       selectFont.addEventListener('change', (e) => {
-        localStorage.setItem('TypeArcade_fontSize', e.target.value);
-        document.documentElement.style.setProperty('--base-font-size', e.target.value + 'px');
+        localStorage.setItem('typeArcade_fontSize', e.target.value);
+        document.documentElement.style.setProperty('--typing-font-size', e.target.value + 'px');
       });
     });
   </script>

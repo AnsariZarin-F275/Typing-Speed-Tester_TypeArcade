@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load Settings
   const baseFontSize = localStorage.getItem('typeArcade_fontSize');
   if (baseFontSize) {
-    document.documentElement.style.setProperty('--base-font-size', baseFontSize + 'px');
+    document.documentElement.style.setProperty('--typing-font-size', baseFontSize + 'px');
   }
 
   // Nav highlights
