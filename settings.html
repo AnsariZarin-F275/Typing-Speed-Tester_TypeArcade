@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeArcade - Settings</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      background: #cbd5e1;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .toggle-switch.active { background: var(--color-primary); }
+    .toggle-switch.active::after { transform: translateX(26px); }
+
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .settings-row:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">T</span>
+      TypeArcade
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="test.html">Test</a></li>
+      <li><a href="practice.html">Practice</a></li>
+      <li><a href="leaderboard.html">Leaderboard</a></li>
+      <li><a href="progress.html">Progress</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="page-header mt-2 mb-2">
+      <h2>Preferences & <span class="gradient-text">Settings</span></h2>
+      <p class="mb-2">Customize your typing experience.</p>
+    </div>
+
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+      <h3 class="mb-2">General</h3>
+      
+      <div class="settings-row">
+        <div>
+          <h4>Sound Effects</h4>
+          <p class="text-muted" style="font-size: 0.9rem;">Play key clicks and milestone sounds.</p>
+        </div>
+        <div class="toggle-switch" id="toggle-sound"></div>
+      </div>
+      
+      <div class="settings-row">
+        <div>
+          <h4>Page UI Animations</h4>
+          <p class="text-muted" style="font-size: 0.9rem;">Enable fade-ins and dynamic hover lifts.</p>
+        </div>
+        <div class="toggle-switch" id="toggle-anim"></div>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <h4>Base Font Size</h4>
+          <p class="text-muted" style="font-size: 0.9rem;">Adjust text scaling.</p>
+        </div>
+        <select class="form-control" id="select-font" style="width: auto; padding: 0.5rem 1rem;">
+          <option value="14">Small (14px)</option>
+          <option value="16">Medium (16px)</option>
+          <option value="20">Large (20px)</option>
+        </select>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/sound.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleSound = document.getElementById('toggle-sound');
+      const toggleAnim = document.getElementById('toggle-anim');
+      const selectFont = document.getElementById('select-font');
+
+      // Init Load
+      const sSound = localStorage.getItem('typeArcade_sound') !== 'false';
+      const sAnim = localStorage.getItem('typeArcade_animations') !== 'false';
+      const sFont = localStorage.getItem('typeArcade_fontSize') || '16';
+
+      if(sSound) toggleSound.classList.add('active');
+      if(sAnim) toggleAnim.classList.add('active');
+      selectFont.value = sFont;
+
+      toggleSound.addEventListener('click', () => {
+        toggleSound.classList.toggle('active');
+        localStorage.setItem('typeArcade_sound', toggleSound.classList.contains('active'));
+      });
+
+      toggleAnim.addEventListener('click', () => {
+        toggleAnim.classList.toggle('active');
+        localStorage.setItem('typeArcade_animations', toggleAnim.classList.contains('active'));
+      });
+
+      selectFont.addEventListener('change', (e) => {
+        localStorage.setItem('typeArcade_fontSize', e.target.value);
+        document.documentElement.style.setProperty('--base-font-size', e.target.value + 'px');
+      });
+    });
+  </script>
+</body>
+</html>

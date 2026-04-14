@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeArcade - Leaderboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .leaderboard-list { max-width: 700px; margin: 0 auto; }
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: var(--color-card-bg);
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      border-left: 4px solid transparent;
+      transition: transform 0.2s ease;
+    }
+    .leaderboard-item:hover { transform: translateX(5px); }
+    .item-rank { font-weight: 800; font-size: 1.2rem; width: 40px; }
+    .item-user { flex: 1; font-weight: 600; font-family: var(--font-heading); font-size: 1.1rem; }
+    .item-stats { display: flex; gap: 1.5rem; }
+    .stat-wpm { color: var(--color-primary); font-weight: 800; font-size: 1.2rem; }
+    
+    .rank-1 { border-left-color: #fbbf24; background: linear-gradient(90deg, rgba(251, 191, 36, 0.1), transparent); }
+    .rank-2 { border-left-color: #94a3b8; background: linear-gradient(90deg, rgba(148, 163, 184, 0.1), transparent); }
+    .rank-3 { border-left-color: #b45309; background: linear-gradient(90deg, rgba(180, 83, 9, 0.1), transparent); }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">T</span>
+      TypeArcade
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="test.html">Test</a></li>
+      <li><a href="practice.html">Practice</a></li>
+      <li><a href="leaderboard.html">Leaderboard</a></li>
+      <li><a href="progress.html">Progress</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="page-header mt-2 mb-2">
+      <h2>Wall of <span class="gradient-text">Fame</span></h2>
+      <p class="mb-2">The fastest typists in the arcade.</p>
+    </div>
+
+    <div class="leaderboard-list">
+      <div class="leaderboard-item rank-1">
+        <span class="item-rank" style="color: #fbbf24;">1</span>
+        <span class="item-user">GhostRider 👑</span>
+        <span class="item-stats">
+          <span style="color: var(--color-success);">100%</span>
+          <span class="stat-wpm">145 WPM</span>
+        </span>
+      </div>
+      
+      <div class="leaderboard-item rank-2">
+        <span class="item-rank" style="color: #94a3b8;">2</span>
+        <span class="item-user">NeonNinja</span>
+        <span class="item-stats">
+          <span style="color: var(--color-success);">98%</span>
+          <span class="stat-wpm">132 WPM</span>
+        </span>
+      </div>
+
+      <div class="leaderboard-item rank-3">
+        <span class="item-rank" style="color: #b45309;">3</span>
+        <span class="item-user">KeysSmasher</span>
+        <span class="item-stats">
+          <span style="color: var(--color-success);">95%</span>
+          <span class="stat-wpm">118 WPM</span>
+        </span>
+      </div>
+
+      <div class="leaderboard-item" style="border-left-color: var(--color-primary);">
+        <span class="item-rank text-muted">4</span>
+        <span class="item-user">PixelPro</span>
+        <span class="item-stats">
+          <span style="color: var(--color-success);">97%</span>
+          <span class="stat-wpm">105 WPM</span>
+        </span>
+      </div>
+
+      <div class="leaderboard-item" style="border-left-color: var(--color-secondary);">
+        <span class="item-rank text-muted">5</span>
+        <span class="item-user">You (Current)</span>
+        <span class="item-stats">
+          <span style="color: var(--color-success);">--</span>
+          <span class="stat-wpm" id="user-wpm">0 WPM</span>
+        </span>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/sound.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const history = JSON.parse(localStorage.getItem('typeArcade_history')) || [];
+      if (history.length > 0) {
+        let bestWpm = 0;
+        history.forEach(session => {
+          if(session.wpm > bestWpm) bestWpm = session.wpm;
+        });
+        document.getElementById('user-wpm').innerText = bestWpm + ' WPM';
+      }
+    });
+  </script>
+</body>
+</html>

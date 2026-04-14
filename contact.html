@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeArcade - Contact</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">T</span>
+      TypeArcade
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="test.html">Test</a></li>
+      <li><a href="practice.html">Practice</a></li>
+      <li><a href="leaderboard.html">Leaderboard</a></li>
+      <li><a href="progress.html">Progress</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="page-header mt-2 mb-2">
+      <h2>Drop us a <span class="gradient-text">Message</span></h2>
+      <p class="mb-2">Found a bug? Want a new feature? We'd love to hear from you!</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <form action="#" method="POST">
+          <div class="form-group">
+            <label for="name">Your Name</label>
+            <input type="text" id="name" class="form-control" placeholder="Jane Doe" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="jane@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" class="form-control" placeholder="Tell us what you're thinking..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 10px;">Send Message 🚀</button>
+        </form>
+      </div>
+
+      <div>
+        <h3 class="mb-2">Frequently Asked Questions</h3>
+        <details>
+          <summary>How is accuracy calculated? <span>+</span></summary>
+          <p>Accuracy is determined by subtracting your missed keystrokes from your total keys typed, divided by total keys typed.</p>
+        </details>
+        <details>
+          <summary>Are sounds mandatory? <span>+</span></summary>
+          <p>No! By default they are enabled once you interact, but you can globally turn them off in the Settings page.</p>
+        </details>
+        <details>
+          <summary>Can I practice my code syntax? <span>+</span></summary>
+          <p>Currently we focus on common English words, but code syntax practice modes are coming soon!</p>
+        </details>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/sound.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeArcade - Progress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .chart-box {
+      width: 100%;
+      height: 350px;
+      padding: 1rem;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      position: relative;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">T</span>
+      TypeArcade
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="test.html">Test</a></li>
+      <li><a href="practice.html">Practice</a></li>
+      <li><a href="leaderboard.html">Leaderboard</a></li>
+      <li><a href="progress.html">Progress</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="page-header mt-2 mb-2">
+      <h2>Your <span class="gradient-text">Journey</span></h2>
+      <p class="mb-2">Track your improvement over time across all tests.</p>
+    </div>
+
+    <div class="chart-box mb-3">
+      <canvas id="progressChart"></canvas>
+    </div>
+
+    <div class="grid-3 text-center">
+      <div class="card">
+        <p class="text-muted text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem;">Total Tests Taken</p>
+        <h2 style="color: var(--color-primary); font-size: 2.5rem;" id="stat-tests">0</h2>
+      </div>
+      <div class="card">
+        <p class="text-muted text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem;">Average WPM</p>
+        <h2 style="color: var(--color-secondary); font-size: 2.5rem;" id="stat-avg-wpm">0</h2>
+      </div>
+      <div class="card">
+        <p class="text-muted text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem;">Best WPM</p>
+        <h2 style="color: var(--color-accent); font-size: 2.5rem;" id="stat-best-wpm">0</h2>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/sound.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const history = JSON.parse(localStorage.getItem('typeArcade_history')) || [];
+      
+      const testsEl = document.getElementById('stat-tests');
+      const avgWpmEl = document.getElementById('stat-avg-wpm');
+      const bestWpmEl = document.getElementById('stat-best-wpm');
+
+      if (history.length > 0) {
+        testsEl.innerText = history.length;
+        
+        let sumWpm = 0;
+        let bestWpm = 0;
+        history.forEach(session => {
+          sumWpm += session.wpm;
+          if(session.wpm > bestWpm) bestWpm = session.wpm;
+        });
+        
+        avgWpmEl.innerText = Math.round(sumWpm / history.length);
+        bestWpmEl.innerText = bestWpm;
+        
+        drawChart(history.map(h => h.wpm));
+      } else {
+        // Fallback mock graph if no data
+        drawChart([20, 35, 33, 45, 52, 48, 60, 65, 80]);
+        testsEl.innerText = "-";
+        avgWpmEl.innerText = "-";
+        bestWpmEl.innerText = "-";
+      }
+
+      function drawChart(wpmData) {
+        const canvas = document.getElementById('progressChart');
+        // Match the canvas CSS width/height correctly to device pixel ratio
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        const ctx = canvas.getContext('2d');
+        
+        const padding = 40;
+        const graphWidth = canvas.width - padding * 2;
+        const graphHeight = canvas.height - padding * 2;
+        
+        const maxWpm = Math.max(...wpmData, 100); // Standardize the ceiling 
+        const minWpm = 0;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw grid
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i <= 5; i++) {
+          const y = padding + (graphHeight / 5) * i;
+          ctx.moveTo(padding, y);
+          ctx.lineTo(canvas.width - padding, y);
+          ctx.fillStyle = '#64748b';
+          ctx.font = '12px Inter';
+          ctx.fillText(Math.round(maxWpm - (maxWpm / 5) * i), 10, y + 4);
+        }
+        ctx.stroke();
+
+        // Draw Line
+        ctx.beginPath();
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#3b82f6'; // Primary blue
+        ctx.lineWidth = 4;
+
+        const pathPoints = [];
+
+        wpmData.forEach((wpm, i) => {
+          const x = padding + (i * (graphWidth / (wpmData.length > 1 ? wpmData.length - 1 : 1)));
+          const y = padding + graphHeight - ((wpm / maxWpm) * graphHeight);
+          pathPoints.push({x, y});
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+
+        ctx.stroke();
+
+        // Fill Gradient
+        const gradient = ctx.createLinearGradient(0, padding, 0, canvas.height - padding);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+        
+        ctx.lineTo(pathPoints[pathPoints.length - 1].x, canvas.height - padding);
+        ctx.lineTo(pathPoints[0].x, canvas.height - padding);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Draw data points
+        ctx.fillStyle = '#ec4899'; // Accent color points
+        pathPoints.forEach(pt => {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+      
+      window.addEventListener('resize', () => {
+         const d = history.map(h => h.wpm).length > 0 ? history.map(h => h.wpm) : [20, 35, 33, 45, 52, 48, 60, 65, 80];
+         drawChart(d);
+      });
+    });
+  </script>
+</body>
+</html>

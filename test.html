@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeArcade - Typing Test</title>
+  <meta name="description" content="Take the typing test and check your WPM.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">T</span>
+      TypeArcade
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="test.html">Test</a></li>
+      <li><a href="practice.html">Practice</a></li>
+      <li><a href="leaderboard.html">Leaderboard</a></li>
+      <li><a href="progress.html">Progress</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="page-header mb-2">
+      <h2>Prove Your <span class="gradient-text">Speed</span></h2>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-label">WPM</span>
+        <span class="stat-value" id="wpm">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Time (s)</span>
+        <span class="stat-value secondary" id="time">30</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Accuracy</span>
+        <span class="stat-value accent" id="accuracy">100%</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Mistakes</span>
+        <span class="stat-value" id="mistakes" style="color: var(--color-error);">0</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="text-center mb-2">
+      <button class="btn btn-primary" id="btn-restart">Restart Mode 🔄</button>
+      <button class="btn btn-outline" id="btn-mode-words">Word Mode</button>
+      <button class="btn btn-outline" id="btn-mode-sentences">Sentence Mode</button>
+    </div>
+
+    <!-- Typing Area -->
+    <div class="typing-box" id="typing-box" tabindex="0">
+      <div class="streak-counter" id="streak-counter">Combo x0!</div>
+      
+      <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="typing-text" id="text-display">
+        <!-- Text injected by JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/sound.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/test.js"></script>
+</body>
+</html>

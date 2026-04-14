@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeArcade - Results</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .weak-key-chip {
+      background: var(--color-error);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      display: inline-block;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">T</span>
+      TypeArcade
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="test.html">Test</a></li>
+      <li><a href="practice.html">Practice</a></li>
+      <li><a href="leaderboard.html">Leaderboard</a></li>
+      <li><a href="progress.html">Progress</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <main class="container text-center">
+    <div class="page-header mt-2 mb-2">
+      <h2>Your <span class="gradient-text">Results</span></h2>
+      <p id="badge-container" class="mt-1"></p>
+    </div>
+
+    <div class="card" style="max-width: 600px; margin: 0 auto; margin-bottom: 2rem;">
+      <h1 id="result-wpm" style="font-size: 5rem; color: var(--color-primary); line-height: 1;">0</h1>
+      <p class="text-muted" style="font-size: 1.2rem; font-weight: 700; text-transform: uppercase;">Words Per Minute</p>
+      
+      <div class="grid-2 mt-2" style="background: #f1f5f9; padding: 1rem; border-radius: 1rem;">
+        <div>
+          <p class="text-muted" style="font-size: 0.9rem; font-weight: 700; text-transform: uppercase;">Accuracy</p>
+          <h2 id="result-acc" style="color: var(--color-accent);">0%</h2>
+        </div>
+        <div>
+          <p class="text-muted" style="font-size: 0.9rem; font-weight: 700; text-transform: uppercase;">Errors</p>
+          <h2 id="result-err" style="color: var(--color-error);">0</h2>
+        </div>
+      </div>
+      
+      <div class="mt-2" id="weak-keys-container" style="display: none;">
+        <p class="text-muted" style="font-size: 0.9rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">Weakest Keys Found</p>
+        <div id="weak-keys-list"></div>
+      </div>
+    </div>
+
+    <div class="mb-3" style="display: flex; gap: 1rem; justify-content: center;">
+      <a href="test.html" class="btn btn-primary">Try Again 🔄</a>
+      <a href="practice.html" class="btn btn-accent" id="btn-practice">Practice Weak Keys 🏋️</a>
+      <a href="leaderboard.html" class="btn btn-secondary">Leaderboard 🏆</a>
+    </div>
+
+  </main>
+
+  <script src="js/sound.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const data = JSON.parse(localStorage.getItem('typingResult'));
+      if (data) {
+        // Play success automatically handled by endTest usually, but we fallback play here if unlocked
+        if (window.playSound) window.playSound('success');
+
+        // Animation
+        let currentWpm = 0;
+        const targetWpm = data.wpm;
+        const wpmEl = document.getElementById('result-wpm');
+        const interval = setInterval(() => {
+          if (currentWpm >= targetWpm) {
+            wpmEl.innerText = targetWpm;
+            clearInterval(interval);
+          } else {
+            currentWpm += Math.ceil(targetWpm / 20) || 1;
+            wpmEl.innerText = currentWpm;
+          }
+        }, 30);
+        
+        document.getElementById('result-acc').innerText = data.accuracy + '%';
+        document.getElementById('result-err').innerText = data.errors;
+
+        const badgeContainer = document.getElementById('badge-container');
+        if (targetWpm > 80) {
+          badgeContainer.innerHTML = '<span class="badge badge-pro">Master</span>';
+        } else if (targetWpm > 50) {
+          badgeContainer.innerHTML = '<span class="badge badge-fast" style="background: var(--color-secondary);">Pro</span>';
+        } else if (targetWpm > 30) {
+          badgeContainer.innerHTML = '<span class="badge badge-fast">Fast</span>';
+        } else {
+          badgeContainer.innerHTML = '<span class="badge badge-beginner">Beginner</span>';
+        }
+
+        // Weak keys
+        if (data.weakKeys && Object.keys(data.weakKeys).length > 0) {
+          const wkContainer = document.getElementById('weak-keys-container');
+          const wkList = document.getElementById('weak-keys-list');
+          wkContainer.style.display = 'block';
+          
+          Object.entries(data.weakKeys)
+            .sort((a, b) => b[1] - a[1]) // sort by most frequent
+            .slice(0, 5) // top 5
+            .forEach(([key, count]) => {
+              const span = document.createElement('span');
+              span.className = 'weak-key-chip';
+              span.innerText = `'${key}' (${count})`;
+              wkList.appendChild(span);
+            });
+        } else {
+          document.getElementById('btn-practice').style.display = 'none';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
