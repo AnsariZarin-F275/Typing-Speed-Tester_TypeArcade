@@ -4,56 +4,77 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TypeArcade - Improve Your Speed</title>
-  <meta name="description" content="A colorful, vibrant arcade-style typing speed tester.">
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="A professional, vibrant typing speed tester.">
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
-<body>
+<body class="fade-in">
   
-  <nav class="navbar">
-    <a href="index.html" class="logo">
-      <span class="logo-icon">T</span>
-      TypeArcade
-    </a>
-    <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="test.html">Test</a></li>
-      <li><a href="practice.html">Practice</a></li>
-      <li><a href="leaderboard.html">Leaderboard</a></li>
-      <li><a href="progress.html">Progress</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="settings.html">Settings</a></li>
-      <li><a href="contact.html">Contact</a></li>
-    </ul>
-  </nav>
+  <nav class="navbar"><a href="index.html" class="logo"><span style="background:#5A4AF4;color:white;padding:3px 8px;border-radius:4px;font-weight:900;margin-right:6px;">TA</span>TypeArcade</a><ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="test.html">Test</a></li><li><a href="practice.html">Practice</a></li><li><a href="leaderboard.html">Leaderboard</a></li><li><a href="progress.html">Progress</a></li><li><a href="about.html">About</a></li><li><a href="settings.html">Settings</a></li><li><a href="contact.html">Contact</a></li></ul></nav>
 
-  <main class="container text-center">
-    <div class="page-header mt-2">
-      <h1 class="gradient-text">Master Your Keystrokes</h1>
-      <p class="mb-2">Enter the arena and challenge yourself. Colorful, vibrant, and fun typing practice to boost your WPM!</p>
+  <main class="container hero-section">
+    <div class="hero-content">
+      <div class="pill-badge">✨ The Ultimate Typing Challenge</div>
+      <h1 class="hero-title">Test Your <br> <span class="gradient-text-new">Typing Speed</span></h1>
+      <p class="hero-subtitle">Challenge yourself with our real-time typing test. Track your WPM, improve accuracy, and compete with players worldwide. Level up your typing skills today!</p>
       
-      <a href="test.html" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 3rem;">Start Test 🚀</a>
+      <div class="hero-actions">
+        <a href="test.html" class="btn btn-primary btn-lg glow-btn">
+          <span style="font-size: 1.2rem; margin-right: 5px;">⚡</span> Start Test Now
+        </a>
+        <a href="leaderboard.html" class="btn btn-outline btn-lg" style="margin-left: 10px;">
+          <span style="font-size: 1.2rem; margin-right: 5px;">🏆</span> View Leaderboard
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-icon text-primary" style="font-size: 1.5rem;">👥</div>
+          <div><strong>50K+</strong><span>Active Players</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon text-primary" style="font-size: 1.5rem;">🚀</div>
+          <div><strong>1M+</strong><span>Tests Completed</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon text-primary" style="font-size: 1.5rem;">🎮</div>
+          <div><strong>5+</strong><span>Game Modes</span></div>
+        </div>
+      </div>
     </div>
 
-    <div class="grid-3 mt-2">
-      <div class="card">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
-        <h3>Lightning Fast</h3>
-        <p class="text-muted mt-1">Real-time WPM tracking and accuracy updates to keep you in the zone.</p>
-      </div>
-      <div class="card">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">🎨</div>
-        <h3>Playful Design</h3>
-        <p class="text-muted mt-1">A vibrant, non-boring environment to keep you engaged while practicing.</p>
-      </div>
-      <div class="card">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">🏆</div>
-        <h3>Leaderboards</h3>
-        <p class="text-muted mt-1">Compete with others and climb the ranks to become a typing master.</p>
+    <div class="hero-visual">
+      <div class="keyboard-card float-animation" id="hero-keyboard">
+        <div class="keyboard-row">
+          <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div><div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
+        </div>
+        <div class="keyboard-row" style="padding-left: 1.5rem;">
+          <div class="key">A</div><div class="key">S</div><div class="key">D</div><div class="key">F</div><div class="key">G</div><div class="key">H</div><div class="key">J</div><div class="key">K</div><div class="key">L</div>
+        </div>
+        <div class="keyboard-row" style="padding-left: 3rem;">
+          <div class="key">Z</div><div class="key">X</div><div class="key">C</div><div class="key">V</div><div class="key">B</div><div class="key">N</div><div class="key">M</div>
+        </div>
+        <div class="visual-progress-wrapper">
+            <div class="visual-progress-bar"><div class="visual-progress-fill shimmer-effect"></div></div>
+        </div>
+        <div class="wpm-display">125 WPM</div>
       </div>
     </div>
   </main>
 
   <script src="js/sound.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    // basic hero keyboard animation
+    const keys = document.querySelectorAll('.hero-visual .key');
+    function typingEffect() {
+      const key = keys[Math.floor(Math.random() * keys.length)];
+      key.classList.add('active', 'pressed');
+      setTimeout(() => key.classList.remove('active', 'pressed'), 150 + Math.random() * 100);
+      setTimeout(typingEffect, 200 + Math.random() * 300);
+    }
+    setTimeout(typingEffect, 500); setTimeout(typingEffect, 800);
+  </script>
 </body>
 </html>
+
+
