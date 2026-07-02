@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css?v=3">
   <link rel="stylesheet" href="css/components.css?v=3">
-  <link rel="stylesheet" href="css/pages.css?v=3">
   <link rel="stylesheet" href="css/animations.css?v=3">
   <style>
     .leaderboard-list { max-width: 700px; margin: 0 auto; }
@@ -50,69 +49,78 @@
     <div class="page-header mt-2 mb-2">
       <h2><span class="gradient-text-new">Wall of Fame</span></h2>
       <p class="mb-2">The fastest typists in the arcade.</p>
+      <p id="firebase-status" class="text-muted">Checking Firebase connection…</p>
     </div>
 
-    <div class="leaderboard-list">
-      <div class="leaderboard-item rank-1">
-        <span class="item-rank" style="color: #fbbf24;">1</span>
-        <span class="item-user">GhostRider</span>
-        <span class="item-stats">
-          <span style="color: var(--color-success);">100%</span>
-          <span class="stat-wpm">145 WPM</span>
-        </span>
-      </div>
-      
-      <div class="leaderboard-item rank-2">
-        <span class="item-rank" style="color: #94a3b8;">2</span>
-        <span class="item-user">NeonNinja</span>
-        <span class="item-stats">
-          <span style="color: var(--color-success);">98%</span>
-          <span class="stat-wpm">132 WPM</span>
-        </span>
-      </div>
-
-      <div class="leaderboard-item rank-3">
-        <span class="item-rank" style="color: #b45309;">3</span>
-        <span class="item-user">KeysSmasher</span>
-        <span class="item-stats">
-          <span style="color: var(--color-success);">95%</span>
-          <span class="stat-wpm">118 WPM</span>
-        </span>
-      </div>
-
-      <div class="leaderboard-item" style="border-left-color: var(--color-primary);">
-        <span class="item-rank text-muted">4</span>
-        <span class="item-user">PixelPro</span>
-        <span class="item-stats">
-          <span style="color: var(--color-success);">97%</span>
-          <span class="stat-wpm">105 WPM</span>
-        </span>
-      </div>
-
-      <div class="leaderboard-item" style="border-left-color: var(--color-secondary);">
-        <span class="item-rank text-muted">5</span>
-        <span class="item-user">You (Current)</span>
-        <span class="item-stats">
-          <span style="color: var(--color-success);">--</span>
-          <span class="stat-wpm" id="user-wpm">0 WPM</span>
-        </span>
-      </div>
-    </div>
+    <div class="leaderboard-list" id="leaderboard-list"></div>
 
   </main>
 
   <script src="js/sound.js"></script>
   <script src="js/app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const history = JSON.parse(localStorage.getItem('TypeArcade_history')) || [];
-      if (history.length > 0) {
-        let bestWpm = 0;
-        history.forEach(session => {
-          if(session.wpm > bestWpm) bestWpm = session.wpm;
+  <script type="module">
+    import { db, collection, getDocs, query, orderBy } from './js/firebase.js';
+
+    const leaderboardList = document.getElementById('leaderboard-list');
+    const firebaseStatus = document.getElementById('firebase-status');
+
+    function renderEmptyState() {
+      leaderboardList.innerHTML = '<div class="card text-center">No leaderboard entries yet. Finish a test to appear here.</div>';
+      firebaseStatus.innerText = 'No leaderboard entries yet';
+      firebaseStatus.style.color = 'var(--color-text-muted)';
+    }
+
+    async function loadLeaderboard() {
+      try {
+        const snapshot = await getDocs(query(collection(db, 'leaderboard'), orderBy('wpm', 'desc')));
+        const entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        leaderboardList.innerHTML = '';
+        if (!entries.length) {
+          renderEmptyState();
+          return;
+        }
+
+        firebaseStatus.innerText = entries.length ? 'Leaderboard ready' : 'No leaderboard entries yet';
+        firebaseStatus.style.color = entries.length ? 'var(--color-success)' : 'var(--color-text-muted)';
+
+        entries.forEach((entry, index) => {
+          const item = document.createElement('div');
+          item.className = 'leaderboard-item';
+          if (index === 0) item.classList.add('rank-1');
+          if (index === 1) item.classList.add('rank-2');
+          if (index === 2) item.classList.add('rank-3');
+
+          const rank = document.createElement('span');
+          rank.className = 'item-rank';
+          rank.innerText = index + 1;
+
+          const user = document.createElement('span');
+          user.className = 'item-user';
+          user.innerText = entry.username || 'Anonymous';
+
+          const stats = document.createElement('span');
+          stats.className = 'item-stats';
+          stats.innerHTML = `<span style="color: var(--color-success);">${Number(entry.accuracy || 0)}%</span><span class="stat-wpm">${Number(entry.wpm || 0)} WPM</span>`;
+
+          item.append(rank, user, stats);
+          leaderboardList.appendChild(item);
         });
-        document.getElementById('user-wpm').innerText = bestWpm + ' WPM';
+      } catch (error) {
+        console.error('[TypeArcade] Leaderboard load failed', error);
+        firebaseStatus.innerText = 'Firebase connection unavailable';
+        firebaseStatus.style.color = 'var(--color-error)';
+        renderEmptyState();
       }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const history = JSON.parse(localStorage.getItem('typeArcade_history')) || [];
+      const best = history.length ? Math.max(...history.map(session => Number(session.wpm) || 0)) : 0;
+      if (best > 0) {
+        leaderboardList.innerHTML = '<div class="card text-center">Loading leaderboard…</div>';
+      }
+      loadLeaderboard();
     });
   </script>
 </body>

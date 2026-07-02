@@ -35,6 +35,55 @@ const NUMBERS_WORDS = [
   ";;;", ":::", "()", "[]", "{}", "<>", "/*", "*/", "//", "\"\"", "''", "``"
 ];
 
+const STORAGE_KEYS = {
+  result: 'typingResult',
+  history: 'typeArcade_history',
+  leaderboard: 'leaderboard',
+  weakKeys: 'weakKeys',
+  sound: 'typeArcade_sound',
+  animations: 'typeArcade_animations',
+  fontSize: 'typeArcade_fontSize'
+};
+
+function safeParse(value, fallback = null) {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value !== 'string') return value;
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.warn('[TypeArcade] Failed to parse stored value', value, error);
+    return fallback;
+  }
+}
+
+function readStorage(key, fallback = null) {
+  const rawValue = localStorage.getItem(key);
+  return safeParse(rawValue, fallback);
+}
+
+function writeStorage(key, value) {
+  const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+  localStorage.setItem(key, serialized);
+}
+
+function migrateStorageKey(oldKey, newKey) {
+  if (!localStorage.getItem(newKey) && localStorage.getItem(oldKey)) {
+    localStorage.setItem(newKey, localStorage.getItem(oldKey));
+  }
+}
+
+function initializeStorage() {
+  migrateStorageKey('TypeArcade_history', STORAGE_KEYS.history);
+  migrateStorageKey('typeArcade_history', STORAGE_KEYS.history);
+
+  if (!localStorage.getItem(STORAGE_KEYS.result) && localStorage.getItem('typeArcade_result')) {
+    localStorage.setItem(STORAGE_KEYS.result, localStorage.getItem('typeArcade_result'));
+  }
+}
+
+initializeStorage();
+
 function getRandomWords(count) {
   let words = [];
   for (let i = 0; i < count; i++) {
@@ -66,13 +115,13 @@ function getRandomSentence() {
 // Active Nav State logic & Body fade
 document.addEventListener('DOMContentLoaded', () => {
   // Add body animation class if animations enabled
-  const animationsEnabled = localStorage.getItem('typeArcade_animations') !== 'false';
+  const animationsEnabled = readStorage(STORAGE_KEYS.animations, true) !== false;
   if (animationsEnabled) {
     document.body.classList.add('fade-in');
   }
 
   // Load Settings
-  const baseFontSize = localStorage.getItem('typeArcade_fontSize');
+  const baseFontSize = readStorage(STORAGE_KEYS.fontSize);
   if (baseFontSize) {
     document.documentElement.style.setProperty('--typing-font-size', baseFontSize + 'px');
   }
