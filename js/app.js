@@ -1,4 +1,3 @@
-// app.js - Global App logic
 const WORD_LIST = [
   "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog",
   "developer", "arcade", "frontend", "interface", "dynamic", "vibrant",
@@ -17,7 +16,6 @@ const SENTENCES = [
   "Hard work beats talent when talent fails to work hard."
 ];
 
-// Home Row Drill - words with A S D F J K L ; & variations
 const HOMEROW_WORDS = [
   "sad", "lad", "dad", "ask", "flask", "flask", "disk", "ads", "jas", "alfs",
   "flag", "fads", "jabs", "lads", "lack", "falls", "flash", "salary", "salad",
@@ -25,7 +23,6 @@ const HOMEROW_WORDS = [
   "salsa", "salsa", "alf", "alfa", "das", "all", "alley", "jazz", "jazzed"
 ];
 
-// Numbers & Symbols Drill - NO ALPHABETS
 const NUMBERS_WORDS = [
   "123", "456", "789", "100", "2020", "2024", "2025", "3.14", "9.99", "100%",
   "50%", "99.9%", "007", "404", "8-8-8", "24/7", "50/50", "3:30", "12:00",
@@ -112,21 +109,17 @@ function getRandomSentence() {
   return SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
 }
 
-// Active Nav State logic & Body fade
 document.addEventListener('DOMContentLoaded', () => {
-  // Add body animation class if animations enabled
   const animationsEnabled = readStorage(STORAGE_KEYS.animations, true) !== false;
   if (animationsEnabled) {
     document.body.classList.add('fade-in');
   }
 
-  // Load Settings
   const baseFontSize = readStorage(STORAGE_KEYS.fontSize);
   if (baseFontSize) {
     document.documentElement.style.setProperty('--typing-font-size', baseFontSize + 'px');
   }
 
-  // Nav highlights
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   const navLinks = document.querySelectorAll('.nav-links a');
   

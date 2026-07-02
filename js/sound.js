@@ -1,7 +1,4 @@
-// sound.js - Global Sound System
 
-// Base64 Audio chunks to ensure it works entirely local without external HTTP requests.
-// These are standard short synthesized waves.
 const audioAssets = {
   key: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=", // Placeholder generic fast pop
   correct: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
@@ -9,14 +6,11 @@ const audioAssets = {
   success: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="
 };
 
-// Creating real synthesized soft sounds using Web Audio API instead of base64 to ensure they are soft and pleasant!
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let unlocked = false;
 
-// Unlock audio context on first user interaction
 function unlockAudio() {
   if (unlocked) return;
-  // Create empty buffer
   const buffer = audioCtx.createBuffer(1, 1, 22050);
   const source = audioCtx.createBufferSource();
   source.buffer = buffer;
@@ -36,7 +30,6 @@ document.addEventListener('click', unlockAudio);
 document.addEventListener('keydown', unlockAudio);
 
 window.playSound = function(type) {
-  // Check settings
   const soundEnabled = localStorage.getItem('typeArcade_sound') !== 'false'; // Default to true
   if (!soundEnabled || !unlocked) return;
 
@@ -72,7 +65,6 @@ window.playSound = function(type) {
     oscillator.stop(audioCtx.currentTime + 0.15);
   }
   else if (type === 'success') {
-    // Small chord for success
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
     oscillator.frequency.setValueAtTime(554.37, audioCtx.currentTime + 0.1); // C#5
@@ -84,7 +76,6 @@ window.playSound = function(type) {
   }
 };
 
-// Also play soft click on all buttons
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('button, .btn').forEach(btn => {
     btn.addEventListener('click', () => {

@@ -8,7 +8,6 @@
   to { transform: scale(1.1); }
 }
 
-/* Shake Animation */
 @keyframes shake {
   10%, 90% { transform: translate3d(-1px, 0, 0); }
   20%, 80% { transform: translate3d(2px, 0, 0); }
@@ -36,7 +35,6 @@
   100% { transform: translateX(100%); }
 }
 
-/* ---- Advanced Staggered Animations & Polish ---- */
 .fade-in-up {
   opacity: 0;
   transform: translateY(20px);
@@ -56,7 +54,6 @@
   }
 }
 
-/* Glowing Button Effect */
 .glow-btn {
   position: relative;
   overflow: hidden;
@@ -86,7 +83,6 @@
   transform: scale(1);
 }
 
-/* Stat Card Hover Effects */
 .stat {
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: default;

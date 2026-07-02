@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Nunito:wght@400;600;800&display=swap');
 
 :root {
-  /* Beautiful Universal Colorful Palette */
+  
   --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
   --color-primary: #5A4AF4; /* Pulse Indigo/Purple */
   --color-secondary: #E94E91; /* Energetic Pink */
@@ -81,7 +81,6 @@ ul { list-style: none; }
 
 .text-center { text-align: center; }
 
-/* Utilities */
 .mb-1 { margin-bottom: 1rem; }
 .mb-2 { margin-bottom: 2rem; }
 .mb-3 { margin-bottom: 3rem; }

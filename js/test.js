@@ -118,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
     typingBox.value = '';
     typingBox.classList.remove('error-state');
 
-    // Generate text
     if (currentMode === 'homerow') {
       targetText = getRandomHomeRowWords(40);
 
