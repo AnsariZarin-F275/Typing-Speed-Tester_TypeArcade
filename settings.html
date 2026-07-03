@@ -58,6 +58,18 @@
       margin-left: auto;
     }
     .settings-row:last-child { border-bottom: none; }
+
+    @media (max-width: 767px) {
+      .settings-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .settings-row select.form-control {
+        width: 100%;
+        min-width: 0;
+        margin-left: 0;
+      }
+    }
   </style>
   </head>
 <body>

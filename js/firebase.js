@@ -6,7 +6,11 @@ import {
   getDocs,
   query,
   orderBy,
-  limit
+  limit,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -28,5 +32,9 @@ export {
   getDocs,
   query,
   orderBy,
-  limit
+  limit,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc
 };

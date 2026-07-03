@@ -122,7 +122,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   const navLinks = document.querySelectorAll('.nav-links a');
-  
+  const nav = document.querySelector('.navbar');
+  const navLinksList = document.querySelector('.nav-links');
+
+  if (nav && navLinksList && !document.querySelector('.nav-toggle')) {
+    const toggleButton = document.createElement('button');
+    toggleButton.type = 'button';
+    toggleButton.className = 'nav-toggle';
+    toggleButton.setAttribute('aria-expanded', 'false');
+    toggleButton.setAttribute('aria-label', 'Toggle navigation');
+    toggleButton.innerHTML = '<span></span>';
+
+    nav.insertBefore(toggleButton, navLinksList);
+
+    toggleButton.addEventListener('click', () => {
+      const isOpen = navLinksList.classList.toggle('open');
+      toggleButton.classList.toggle('active', isOpen);
+      toggleButton.setAttribute('aria-expanded', String(isOpen));
+      document.body.classList.toggle('nav-open', isOpen);
+    });
+
+    navLinksList.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinksList.classList.remove('open');
+        toggleButton.classList.remove('active');
+        toggleButton.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('nav-open');
+      });
+    });
+  }
+
   navLinks.forEach(link => {
     if (link.getAttribute('href') === currentPath) {
       link.classList.add('active');

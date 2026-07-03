@@ -22,6 +22,7 @@
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
       border-left: 4px solid transparent;
       transition: transform 0.2s ease;
+      overflow: hidden;
     }
     .leaderboard-item:hover { transform: translateX(5px); }
     .item-rank { font-weight: 800; font-size: 1.2rem; text-align: center; }
@@ -39,6 +40,22 @@
     .rank-1 { border-left-color: #fbbf24; background: linear-gradient(90deg, rgba(251, 191, 36, 0.1), transparent); }
     .rank-2 { border-left-color: #94a3b8; background: linear-gradient(90deg, rgba(148, 163, 184, 0.1), transparent); }
     .rank-3 { border-left-color: #b45309; background: linear-gradient(90deg, rgba(180, 83, 9, 0.1), transparent); }
+
+    @media (max-width: 767px) {
+      .leaderboard-list { max-width: 100%; }
+      .leaderboard-item {
+        grid-template-columns: 32px minmax(0, 1fr);
+        padding: 0.9rem 1rem;
+      }
+      .item-stats {
+        grid-column: 2;
+        justify-items: start;
+        grid-auto-flow: row;
+        gap: 0.35rem;
+        min-width: 0;
+      }
+      .item-user { font-size: 1rem; }
+    }
   </style>
   </head>
 <body>

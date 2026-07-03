@@ -49,6 +49,17 @@
 
     <!-- Typing Area -->
     <div class="typing-box" id="typing-box" tabindex="0">
+      <input
+        id="typing-input"
+        class="typing-input"
+        type="text"
+        inputmode="text"
+        autocomplete="off"
+        autocapitalize="none"
+        autocorrect="off"
+        spellcheck="false"
+        aria-label="Typing test input"
+      >
       <div class="streak-counter" id="streak-counter">Combo x0!</div>
       
       <div class="progress-container">
@@ -63,7 +74,7 @@
 
   <script src="js/sound.js"></script>
   <script src="js/app.js"></script>
-  <script src="js/test.js"></script>
+  <script type="module" src="js/test.js"></script>
 </body>
 </html>
 

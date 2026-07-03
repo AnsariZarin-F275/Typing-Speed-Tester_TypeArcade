@@ -1,7 +1,15 @@
+import {
+  db,
+  doc,
+  getDoc,
+  setDoc
+} from './firebase.js';
+
 document.addEventListener('DOMContentLoaded', () => {
 
   const textDisplay = document.getElementById('text-display');
   const typingBox = document.getElementById('typing-box');
+  const typingInput = document.getElementById('typing-input');
   const wpmDisplay = document.getElementById('wpm');
   const timeDisplay = document.getElementById('time');
   const accuracyDisplay = document.getElementById('accuracy');
@@ -24,74 +32,368 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentStreak = 0;
   let charElements = [];
   let weakKeys = {};
+  let typedValue = '';
+  let lastInputValue = '';
+  let suppressNextInput = false;
 
   const urlParams = new URLSearchParams(window.location.search);
   let currentMode = urlParams.get('drill') || 'words';
 
-  function ensureUsername() {
-    const existingUsername = (localStorage.getItem('typeArcade_username') || '').trim();
-    if (existingUsername) return existingUsername;
-
-    const modal = document.createElement('div');
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.right = '0';
-    modal.style.bottom = '0';
-    modal.style.background = 'rgba(15, 23, 42, 0.7)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '9999';
-
-    const card = document.createElement('div');
-    card.style.background = 'white';
-    card.style.borderRadius = '16px';
-    card.style.padding = '1.25rem';
-    card.style.width = 'min(90vw, 360px)';
-    card.style.boxShadow = '0 20px 50px rgba(0,0,0,0.25)';
-
-    const title = document.createElement('h3');
-    title.textContent = 'Choose a username';
-    title.style.marginBottom = '0.75rem';
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = 'Player';
-    input.maxLength = 20;
-    input.style.width = '100%';
-    input.style.padding = '0.7rem 0.85rem';
-    input.style.border = '1px solid #cbd5e1';
-    input.style.borderRadius = '10px';
-    input.style.marginBottom = '0.75rem';
-
-    const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save';
-    saveButton.className = 'btn btn-primary';
-    saveButton.style.width = '100%';
-
-    const saveUsername = () => {
-      const username = (input.value || 'Player').trim().slice(0, 20) || 'Player';
-      localStorage.setItem('typeArcade_username', username);
-      modal.remove();
-    };
-
-    saveButton.addEventListener('click', saveUsername);
-    input.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        saveUsername();
-      }
-    });
-
-    card.append(title, input, saveButton);
-    modal.appendChild(card);
-    document.body.appendChild(modal);
-    input.focus();
-    return localStorage.getItem('typeArcade_username') || 'Player';
+  function focusTypingInput() {
+    if (!typingInput) return;
+    typingInput.focus({ preventScroll: true });
+    typingBox?.classList.add('focused');
+    document.body.classList.add('mobile-typing-active');
   }
 
-  ensureUsername();
+  function startTimerIfNeeded() {
+    if (isTyping) return;
+
+    isTyping = true;
+
+    timer = setInterval(() => {
+      timeLeft--;
+      timeDisplay.innerText = timeLeft;
+
+      const mins = (timeLimit - timeLeft) / 60;
+
+      if (mins > 0) {
+        wpmDisplay.innerText = Math.round((correctChars / 5) / mins);
+      }
+
+      if (timeLeft <= 0) {
+        endTest();
+      }
+    }, 1000);
+  }
+
+  function updateStats() {
+    accuracyDisplay.innerText = `${Math.round(((charsTyped - errors) / Math.max(charsTyped, 1)) * 100)}%`;
+    mistakesDisplay.innerText = errors;
+    progressBar.style.width = `${(charsTyped / Math.max(targetText.length, 1)) * 100}%`;
+  }
+
+  function handleBackspace() {
+    if (charsTyped <= 0) return;
+
+    charsTyped--;
+    const current = charElements[charsTyped];
+    const next = charElements[charsTyped + 1];
+
+    if (next) next.classList.remove('active');
+    if (current) {
+      current.classList.remove('correct', 'incorrect');
+      current.classList.add('active');
+    }
+
+    currentStreak = 0;
+    typedValue = typedValue.slice(0, -1);
+    updateStats();
+  }
+
+  function processCharacter(key) {
+    if (charsTyped >= targetText.length) return;
+
+    const expected = targetText[charsTyped];
+    const span = charElements[charsTyped];
+
+    if (!span) return;
+
+    span.classList.remove('active');
+
+    if (key === expected) {
+      span.classList.add('correct');
+      correctChars++;
+      handleStreak();
+    } else {
+      span.classList.add('incorrect');
+      errors++;
+      currentStreak = 0;
+      triggerErrorShake();
+
+      const weakKey = expected.toLowerCase();
+      if (weakKey !== ' ') {
+        weakKeys[weakKey] = (weakKeys[weakKey] || 0) + 1;
+      }
+    }
+
+    charsTyped++;
+    typedValue += key;
+    updateStats();
+
+    if (charsTyped < targetText.length) {
+      charElements[charsTyped].classList.add('active');
+    } else {
+      endTest();
+    }
+  }
+
+  function normalizeUsername(username) {
+    return String(username || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'player';
+  }
+
+  async function checkLeaderboardUsername(username) {
+    try {
+      const normalized = normalizeUsername(username);
+      const docRef = doc(db, 'leaderboard', normalized);
+      const snapshot = await getDoc(docRef);
+      return { docRef, exists: snapshot.exists(), data: snapshot.exists() ? snapshot.data() : null };
+    } catch (error) {
+      console.error('[TypeArcade] Username lookup failed', error);
+      return { exists: false, data: null };
+    }
+  }
+
+  async function ensureUsername() {
+    const existingUsername = (localStorage.getItem('typeArcade_username') || '').trim();
+
+    typingInput?.blur();
+    typingBox?.classList.remove('focused');
+    document.body.classList.remove('mobile-typing-active');
+
+    const createUserRecord = async (username) => {
+      const normalizedUsername = normalizeUsername(username);
+      const leaderboardRef = doc(db, 'leaderboard', normalizedUsername);
+      await setDoc(leaderboardRef, {
+        username,
+        wpm: 0,
+        accuracy: 100,
+        errors: 0,
+        weakKeys: {},
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    };
+
+    const promptForUsername = () => new Promise((resolve) => {
+      const modal = document.createElement('div');
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.right = '0';
+      modal.style.bottom = '0';
+      modal.style.background = 'rgba(15, 23, 42, 0.7)';
+      modal.style.display = 'flex';
+      modal.style.alignItems = 'center';
+      modal.style.justifyContent = 'center';
+      modal.style.zIndex = '9999';
+
+      const card = document.createElement('div');
+      card.style.background = 'white';
+      card.style.borderRadius = '16px';
+      card.style.padding = '1.25rem';
+      card.style.width = 'min(90vw, 360px)';
+      card.style.boxShadow = '0 20px 50px rgba(0,0,0,0.25)';
+
+      const title = document.createElement('h3');
+      title.textContent = 'Choose a username';
+      title.style.marginBottom = '0.75rem';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = existingUsername || 'Player';
+      input.maxLength = 20;
+      input.style.width = '100%';
+      input.style.padding = '0.7rem 0.85rem';
+      input.style.border = '1px solid #cbd5e1';
+      input.style.borderRadius = '10px';
+      input.style.marginBottom = '0.75rem';
+
+      const saveButton = document.createElement('button');
+      saveButton.textContent = 'Save';
+      saveButton.className = 'btn btn-primary';
+      saveButton.style.width = '100%';
+
+      const finish = (value) => {
+        modal.remove();
+        resolve(value);
+      };
+
+      const saveUsername = async () => {
+        const username = (input.value || 'Player').trim().slice(0, 20) || 'Player';
+        const lookup = await checkLeaderboardUsername(username);
+
+        if (lookup.exists) {
+          modal.remove();
+          const returnModal = document.createElement('div');
+          returnModal.style.position = 'fixed';
+          returnModal.style.top = '0';
+          returnModal.style.left = '0';
+          returnModal.style.right = '0';
+          returnModal.style.bottom = '0';
+          returnModal.style.background = 'rgba(15, 23, 42, 0.7)';
+          returnModal.style.display = 'flex';
+          returnModal.style.alignItems = 'center';
+          returnModal.style.justifyContent = 'center';
+          returnModal.style.zIndex = '10000';
+
+          const returnCard = document.createElement('div');
+          returnCard.style.background = 'white';
+          returnCard.style.borderRadius = '16px';
+          returnCard.style.padding = '1.25rem';
+          returnCard.style.width = 'min(90vw, 420px)';
+          returnCard.style.boxShadow = '0 20px 50px rgba(0,0,0,0.25)';
+
+          const welcomeTitle = document.createElement('h3');
+          welcomeTitle.textContent = `Welcome back, ${username}!`;
+          welcomeTitle.style.marginBottom = '0.75rem';
+
+          const welcomeText = document.createElement('p');
+          welcomeText.textContent = 'This username already exists.';
+          welcomeText.style.marginBottom = '0.5rem';
+
+          const followUp = document.createElement('p');
+          followUp.textContent = 'Would you like to continue as this user or use another username?';
+          followUp.style.marginBottom = '1rem';
+
+          const buttonRow = document.createElement('div');
+          buttonRow.style.display = 'flex';
+          buttonRow.style.gap = '0.75rem';
+          buttonRow.style.flexWrap = 'wrap';
+
+          const continueButton = document.createElement('button');
+          continueButton.textContent = 'Continue';
+          continueButton.className = 'btn btn-primary';
+          continueButton.style.flex = '1';
+
+          const anotherButton = document.createElement('button');
+          anotherButton.textContent = 'Use Another Username';
+          anotherButton.className = 'btn btn-outline';
+          anotherButton.style.flex = '1';
+
+          continueButton.addEventListener('click', () => {
+            localStorage.setItem('typeArcade_username', username);
+            returnModal.remove();
+            finish({ username, action: 'continue' });
+          });
+
+          anotherButton.addEventListener('click', () => {
+            returnModal.remove();
+            (async () => {
+              const nextChoice = await promptForUsername();
+              resolve(nextChoice);
+            })();
+          });
+
+          returnCard.append(welcomeTitle, welcomeText, followUp, buttonRow);
+          buttonRow.append(continueButton, anotherButton);
+          returnModal.appendChild(returnCard);
+          document.body.appendChild(returnModal);
+          return;
+        }
+
+        localStorage.setItem('typeArcade_username', username);
+        await createUserRecord(username);
+        finish({ username, action: 'new' });
+      };
+
+      saveButton.addEventListener('click', () => {
+        saveUsername();
+      });
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          saveUsername();
+        }
+      });
+
+      card.append(title, input, saveButton);
+      modal.appendChild(card);
+      document.body.appendChild(modal);
+      input.focus();
+    });
+
+    if (existingUsername) {
+      const lookup = await checkLeaderboardUsername(existingUsername);
+      if (lookup.exists) {
+        const returnChoice = await new Promise((resolve) => {
+          const returnModal = document.createElement('div');
+          returnModal.style.position = 'fixed';
+          returnModal.style.top = '0';
+          returnModal.style.left = '0';
+          returnModal.style.right = '0';
+          returnModal.style.bottom = '0';
+          returnModal.style.background = 'rgba(15, 23, 42, 0.7)';
+          returnModal.style.display = 'flex';
+          returnModal.style.alignItems = 'center';
+          returnModal.style.justifyContent = 'center';
+          returnModal.style.zIndex = '10000';
+
+          const returnCard = document.createElement('div');
+          returnCard.style.background = 'white';
+          returnCard.style.borderRadius = '16px';
+          returnCard.style.padding = '1.25rem';
+          returnCard.style.width = 'min(90vw, 420px)';
+          returnCard.style.boxShadow = '0 20px 50px rgba(0,0,0,0.25)';
+
+          const welcomeTitle = document.createElement('h3');
+          welcomeTitle.textContent = `Welcome back, ${existingUsername}!`;
+          welcomeTitle.style.marginBottom = '0.75rem';
+
+          const welcomeText = document.createElement('p');
+          welcomeText.textContent = 'This username already exists.';
+          welcomeText.style.marginBottom = '0.5rem';
+
+          const followUp = document.createElement('p');
+          followUp.textContent = 'Would you like to continue as this user or use another username?';
+          followUp.style.marginBottom = '1rem';
+
+          const buttonRow = document.createElement('div');
+          buttonRow.style.display = 'flex';
+          buttonRow.style.gap = '0.75rem';
+          buttonRow.style.flexWrap = 'wrap';
+
+          const continueButton = document.createElement('button');
+          continueButton.textContent = 'Continue';
+          continueButton.className = 'btn btn-primary';
+          continueButton.style.flex = '1';
+
+          const anotherButton = document.createElement('button');
+          anotherButton.textContent = 'Use Another Username';
+          anotherButton.className = 'btn btn-outline';
+          anotherButton.style.flex = '1';
+
+          continueButton.addEventListener('click', () => {
+            returnModal.remove();
+            resolve('continue');
+          });
+
+          anotherButton.addEventListener('click', () => {
+            returnModal.remove();
+            resolve('another');
+          });
+
+          returnCard.append(welcomeTitle, welcomeText, followUp, buttonRow);
+          buttonRow.append(continueButton, anotherButton);
+          returnModal.appendChild(returnCard);
+          document.body.appendChild(returnModal);
+        });
+
+        if (returnChoice === 'continue') {
+          const lookupAgain = await checkLeaderboardUsername(existingUsername);
+          if (!lookupAgain.exists) {
+            await createUserRecord(existingUsername);
+          }
+          return { username: existingUsername, action: 'continue' };
+        }
+
+        return promptForUsername();
+      }
+
+      if (!lookup.exists) {
+        await createUserRecord(existingUsername);
+      }
+      return { username: existingUsername, action: 'continue' };
+    }
+
+    return promptForUsername();
+  }
+
+  ensureUsername().then((result) => {
+    if (result && result.username) {
+      initTest();
+    }
+  });
 
   function initTest() {
 
@@ -115,8 +417,17 @@ document.addEventListener('DOMContentLoaded', () => {
     streakCounter.innerText = '';
     streakCounter.classList.remove('streak-active');
 
-    typingBox.value = '';
+    if (typingInput) {
+      typingInput.value = '';
+      typingInput.setAttribute('autocomplete', 'off');
+      typingInput.setAttribute('autocapitalize', 'off');
+      typingInput.setAttribute('autocorrect', 'off');
+      typingInput.setAttribute('spellcheck', 'false');
+    }
     typingBox.classList.remove('error-state');
+    typedValue = '';
+    lastInputValue = '';
+    suppressNextInput = false;
 
     if (currentMode === 'homerow') {
       targetText = getRandomHomeRowWords(40);
@@ -179,7 +490,10 @@ document.addEventListener('DOMContentLoaded', () => {
       charElements[0].classList.add('active');
     }
 
-    typingBox.focus();
+    const hasUsername = (localStorage.getItem('typeArcade_username') || '').trim();
+    if (hasUsername) {
+      setTimeout(() => focusTypingInput(), 50);
+    }
   }
 
   function handleStreak() {
@@ -222,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 200);
   }
 
-  function endTest() {
+  async function endTest() {
 
     if (timer === null) return;
 
@@ -288,6 +602,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
       writeStorage(STORAGE_KEYS.history, history);
       console.log('[TypeArcade] History saved', history);
+
+      const normalizedUsername = normalizeUsername(username);
+      const leaderboardRef = doc(db, 'leaderboard', normalizedUsername);
+      const existingSnapshot = await getDoc(leaderboardRef);
+
+      if (!existingSnapshot.exists()) {
+        await setDoc(leaderboardRef, {
+          username: username,
+          wpm: computedWpm,
+          accuracy: accuracy,
+          errors: errors,
+          weakKeys: weakKeys,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        const existingData = existingSnapshot.data() || {};
+        const existingWpm = Number(existingData.wpm || 0);
+        const existingAccuracy = Number(existingData.accuracy || 0);
+
+        if (computedWpm > existingWpm || (computedWpm === existingWpm && accuracy > existingAccuracy)) {
+          await setDoc(leaderboardRef, {
+            username: username,
+            wpm: computedWpm,
+            accuracy: accuracy,
+            errors: errors,
+            weakKeys: weakKeys,
+            createdAt: existingData.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+        }
+      }
     } catch (err) {
       console.error('[TypeArcade] Local storage error', err);
     }
@@ -298,181 +644,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 
-  typingBox.addEventListener(
-    'keydown',
-    (e) => {
+  typingInput?.addEventListener('keydown', (e) => {
+    if (e.key === ' ') {
+      e.preventDefault();
+      startTimerIfNeeded();
+      suppressNextInput = true;
+      processCharacter(' ');
+      typingInput.value = '';
+      lastInputValue = '';
+      return;
+    }
 
-      if (
-        e.key.length > 1 &&
-        e.key !== 'Backspace'
-      ) return;
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      startTimerIfNeeded();
+      handleBackspace();
+      typingInput.value = '';
+      lastInputValue = '';
+      return;
+    }
 
-      if (e.key === ' ') {
-        e.preventDefault();
+    if (e.key.length > 1) return;
+    startTimerIfNeeded();
+  });
+
+  typingInput?.addEventListener('input', () => {
+    if (!typingInput) return;
+
+    const currentValue = typingInput.value;
+
+    if (suppressNextInput) {
+      suppressNextInput = false;
+      typingInput.value = '';
+      lastInputValue = '';
+      return;
+    }
+
+    if (currentValue.length !== lastInputValue.length || currentValue.length === 0) {
+      startTimerIfNeeded();
+    }
+
+    if (currentValue.length < lastInputValue.length) {
+      const deletions = lastInputValue.length - currentValue.length;
+      for (let index = 0; index < deletions; index++) {
+        handleBackspace();
       }
-
-      if (
-        !isTyping &&
-        e.key !== 'Backspace'
-      ) {
-
-        isTyping = true;
-
-        timer =
-          setInterval(() => {
-
-            timeLeft--;
-
-            timeDisplay.innerText =
-              timeLeft;
-
-            const mins =
-              (timeLimit -
-                timeLeft) / 60;
-
-            if (mins > 0) {
-
-              wpmDisplay.innerText =
-                Math.round(
-                  (correctChars / 5)
-                  / mins
-                );
-            }
-
-            if (timeLeft <= 0) {
-              endTest();
-            }
-
-          }, 1000);
-      }
-
-      if (e.key === 'Backspace') {
-
-        if (charsTyped > 0) {
-
-          charsTyped--;
-
-          const current =
-            charElements[
-              charsTyped
-            ];
-
-          const next =
-            charElements[
-              charsTyped + 1
-            ];
-
-          if (next)
-            next.classList.remove(
-              'active'
-            );
-
-          current.classList.remove(
-            'correct',
-            'incorrect'
-          );
-
-          current.classList.add(
-            'active'
-          );
-
-          currentStreak = 0;
-        }
-
-        return;
-      }
-
-      if (
-        charsTyped >=
-        targetText.length
-      ) {
-        return;
-      }
-
-      const expected =
-        targetText[charsTyped];
-
-      const typed =
-        e.key;
-
-      const span =
-        charElements[
-          charsTyped
-        ];
-
-      span.classList.remove(
-        'active'
-      );
-
-      if (
-        typed === expected
-      ) {
-
-        span.classList.add(
-          'correct'
-        );
-
-        correctChars++;
-
-        handleStreak();
-
-      } else {
-
-        span.classList.add(
-          'incorrect'
-        );
-
-        errors++;
-
-        mistakesDisplay.innerText =
-          errors;
-
-        currentStreak = 0;
-
-        triggerErrorShake();
-
-        const key =
-          expected.toLowerCase();
-
-        if (key !== ' ') {
-
-          weakKeys[key] =
-            (weakKeys[key] || 0)
-            + 1;
-        }
-      }
-
-      charsTyped++;
-
-      accuracyDisplay.innerText =
-        Math.round(
-          ((charsTyped - errors)
-          / charsTyped) * 100
-        ) + '%';
-
-      progressBar.style.width =
-        (
-          charsTyped /
-          targetText.length
-        ) * 100 + '%';
-
-      if (
-        charsTyped <
-        targetText.length
-      ) {
-
-        charElements[
-          charsTyped
-        ].classList.add(
-          'active'
-        );
-
-      } else {
-
-        endTest();
+    } else if (currentValue.length > lastInputValue.length) {
+      const appended = currentValue.slice(lastInputValue.length);
+      if (appended) {
+        appended.split('').forEach((char) => processCharacter(char));
       }
     }
-  );
+
+    lastInputValue = currentValue;
+  });
+
+  typingBox?.addEventListener('click', focusTypingInput);
+  typingBox?.addEventListener('touchstart', focusTypingInput, { passive: true });
+  typingInput?.addEventListener('focus', () => {
+    typingBox?.classList.add('focused');
+    document.body.classList.add('mobile-typing-active');
+  });
+  typingInput?.addEventListener('blur', () => {
+    typingBox?.classList.remove('focused');
+    document.body.classList.remove('mobile-typing-active');
+  });
 
   btnRestart.addEventListener(
     'click',
@@ -495,5 +731,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   );
 
-  initTest();
 });

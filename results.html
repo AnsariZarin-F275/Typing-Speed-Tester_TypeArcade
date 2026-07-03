@@ -41,6 +41,10 @@
     .stat-value { font-family: var(--font-heading); font-size: 2.5rem; font-weight: 800; color: var(--color-primary); }
     .stat-value.accent { color: var(--color-accent); }
     .stat-value.secondary { color: var(--color-secondary); }
+
+    @media (max-width: 767px) {
+      .card h1 { font-size: clamp(2.8rem, 12vw, 4rem) !important; }
+    }
   </style>
   </head>
 <body>
@@ -89,8 +93,9 @@
 <script type="module">
 import {
   db,
-  collection,
-  addDoc
+  doc,
+  getDoc,
+  setDoc
 } from "./js/firebase.js";
 
 function safeParse(value, fallback = null) {
@@ -126,17 +131,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statusEl = document.getElementById('badge-container');
 
   try {
-    const docRef = await addDoc(collection(db, 'leaderboard'), {
-      username: data.username || localStorage.getItem('typeArcade_username') || 'Player',
-      wpm: data.wpm || 0,
-      accuracy: data.accuracy || 0,
-      errors: data.errors || 0,
-      weakKeys: data.weakKeys || {},
-      createdAt: new Date()
-    });
+    const username = data.username || localStorage.getItem('typeArcade_username') || 'Player';
+    const normalizedUsername = String(username).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'player';
+    const leaderboardRef = doc(db, 'leaderboard', normalizedUsername);
+    const existingSnapshot = await getDoc(leaderboardRef);
+
+    if (!existingSnapshot.exists()) {
+      await setDoc(leaderboardRef, {
+        username,
+        wpm: Number(data.wpm || 0),
+        accuracy: Number(data.accuracy || 0),
+        errors: Number(data.errors || 0),
+        weakKeys: data.weakKeys || {},
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    } else {
+      const existingData = existingSnapshot.data() || {};
+      const existingWpm = Number(existingData.wpm || 0);
+      const existingAccuracy = Number(existingData.accuracy || 0);
+      const incomingWpm = Number(data.wpm || 0);
+      const incomingAccuracy = Number(data.accuracy || 0);
+
+      if (incomingWpm > existingWpm || (incomingWpm === existingWpm && incomingAccuracy > existingAccuracy)) {
+        await setDoc(leaderboardRef, {
+          username,
+          wpm: incomingWpm,
+          accuracy: incomingAccuracy,
+          errors: Number(data.errors || 0),
+          weakKeys: data.weakKeys || {},
+          createdAt: existingData.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      }
+    }
 
     firebaseStatusText = 'Leaderboard updated';
-    console.log('[TypeArcade] Firebase document written', docRef.id);
+    console.log('[TypeArcade] Firebase document written', normalizedUsername);
   } catch (error) {
     firebaseStatusText = 'Sync failed';
     console.error('[TypeArcade] Firebase write failed', error);
