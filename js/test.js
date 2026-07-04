@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let weakKeys = {};
   let typedValue = '';
   let lastInputValue = '';
-  let suppressNextInput = false;
 
   const urlParams = new URLSearchParams(window.location.search);
   let currentMode = urlParams.get('drill') || 'words';
@@ -82,6 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (next) next.classList.remove('active');
     if (current) {
+      if (current.classList.contains('correct')) {
+        correctChars--;
+      } else if (current.classList.contains('incorrect')) {
+        errors--;
+      }
       current.classList.remove('correct', 'incorrect');
       current.classList.add('active');
     }
@@ -427,7 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
     typingBox.classList.remove('error-state');
     typedValue = '';
     lastInputValue = '';
-    suppressNextInput = false;
 
     if (currentMode === 'homerow') {
       targetText = getRandomHomeRowWords(40);
@@ -437,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } else if (currentMode === 'weakkeys') {
 
-      const data = readStorage(STORAGE_KEYS.result);
+      const data = readStorage('typingResult');
 
       if (
         data &&
@@ -537,7 +540,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function endTest() {
-
     if (timer === null) return;
 
     clearInterval(timer);
@@ -549,6 +551,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.playSound) {
       window.playSound('success');
     }
+    
+    // Block interaction to prevent user from navigating away and cancelling the save
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.background = 'rgba(255,255,255,0.8)';
+    overlay.style.zIndex = '9999';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.fontSize = '1.5rem';
+    overlay.style.fontWeight = 'bold';
+    overlay.style.color = 'var(--color-primary)';
+    overlay.innerText = 'Saving Score...';
+    document.body.appendChild(overlay);
 
     const elapsed =
       (timeLimit - timeLeft) > 0
@@ -588,10 +608,10 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[TypeArcade] Saving result', result);
 
     try {
-      writeStorage(STORAGE_KEYS.result, result);
-      writeStorage(STORAGE_KEYS.weakKeys, result.weakKeys || {});
+      writeStorage('typingResult', result);
+      writeStorage('weakKeys', result.weakKeys || {});
 
-      const history = readStorage(STORAGE_KEYS.history, []);
+      const history = readStorage('typeArcade_history', []);
       history.push({
         username: username,
         date: new Date().toISOString(),
@@ -600,9 +620,13 @@ document.addEventListener('DOMContentLoaded', () => {
         errors: errors
       });
 
-      writeStorage(STORAGE_KEYS.history, history);
+      writeStorage('typeArcade_history', history);
       console.log('[TypeArcade] History saved', history);
+    } catch (err) {
+      console.error('[TypeArcade] Local storage error', err);
+    }
 
+    try {
       const normalizedUsername = normalizeUsername(username);
       const leaderboardRef = doc(db, 'leaderboard', normalizedUsername);
       const existingSnapshot = await getDoc(leaderboardRef);
@@ -635,20 +659,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     } catch (err) {
-      console.error('[TypeArcade] Local storage error', err);
+      console.error('[TypeArcade] Firebase update error', err);
     }
 
-    setTimeout(() => {
-      console.log('[TypeArcade] Redirecting to results');
-      window.location.href = 'results.html';
-    }, 1000);
+    console.log('[TypeArcade] Redirecting to results');
+    window.location.href = 'results.html';
   }
 
   typingInput?.addEventListener('keydown', (e) => {
     if (e.key === ' ') {
       e.preventDefault();
       startTimerIfNeeded();
-      suppressNextInput = true;
       processCharacter(' ');
       typingInput.value = '';
       lastInputValue = '';
@@ -672,13 +693,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!typingInput) return;
 
     const currentValue = typingInput.value;
-
-    if (suppressNextInput) {
-      suppressNextInput = false;
-      typingInput.value = '';
-      lastInputValue = '';
-      return;
-    }
 
     if (currentValue.length !== lastInputValue.length || currentValue.length === 0) {
       startTimerIfNeeded();

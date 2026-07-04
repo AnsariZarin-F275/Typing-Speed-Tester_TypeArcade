@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Firebase Debugger</title>
+  <style>body { font-family: sans-serif; padding: 2rem; }</style>
+</head>
+<body>
+  <h1>Firebase Update Debugger</h1>
+  <button id="runDebug" style="padding: 10px 20px; font-size: 1.2rem;">Run Debug Test</button>
+  <pre id="output" style="background: #eee; padding: 1rem; margin-top: 1rem; min-height: 200px; border: 1px solid #ccc;"></pre>
+
+  <script type="module">
+    import { db, doc, getDoc, setDoc } from "./js/firebase.js";
+
+    function log(msg) {
+      document.getElementById('output').innerText += msg + '\n';
+      console.log(msg);
+    }
+
+    document.getElementById('runDebug').addEventListener('click', async () => {
+      document.getElementById('output').innerText = '';
+      log('Starting Firebase Test...');
+      try {
+        const username = localStorage.getItem('typeArcade_username') || 'Player';
+        log('Username from storage: ' + username);
+
+        const normalizedUsername = String(username).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'player';
+        log('Normalized username: ' + normalizedUsername);
+
+        const leaderboardRef = doc(db, 'leaderboard', normalizedUsername);
+        log('Fetching existing document...');
+        const existingSnapshot = await getDoc(leaderboardRef);
+
+        const computedWpm = 55;
+        const accuracy = 98;
+        const errors = 2;
+        const weakKeys = { "a": 1 };
+
+        if (!existingSnapshot.exists()) {
+          log('Document does not exist. Creating...');
+          await setDoc(leaderboardRef, {
+            username: username,
+            wpm: computedWpm,
+            accuracy: accuracy,
+            errors: errors,
+            weakKeys: weakKeys,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          log('SUCCESS: Document created!');
+        } else {
+          log('Document exists. Attempting to update...');
+          const existingData = existingSnapshot.data() || {};
+          const existingWpm = Number(existingData.wpm || 0);
+          log('Existing WPM: ' + existingWpm);
+          
+          if (computedWpm > existingWpm) {
+            log('New WPM (55) is greater than existing (' + existingWpm + '). Updating...');
+            await setDoc(leaderboardRef, {
+              username: username,
+              wpm: computedWpm,
+              accuracy: accuracy,
+              errors: errors,
+              weakKeys: weakKeys,
+              createdAt: existingData.createdAt || new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }, { merge: true });
+            log('SUCCESS: Document updated!');
+          } else {
+            log('SKIPPED: New WPM is not greater than existing WPM.');
+          }
+        }
+      } catch (err) {
+        log('ERROR: ' + err.message);
+        log(err.stack);
+      }
+    });
+  </script>
+</body>
+</html>
